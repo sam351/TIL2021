@@ -22,6 +22,8 @@
 
 # 데이터 모델링의 전체 흐름
 
+![image-20210312134430180](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210312134430180.png)
+
 **1.  업무 파악**
 
 - 모델링을 의뢰한 사람의 업무 및 요구사항을 파악하는 단계
@@ -162,7 +164,7 @@
 
 - 제1정규화 샘플
 
-![image-20210310142630545](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210310142630545.png)
+  ![image-20210310142630545](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210310142630545.png)
 
 
 
@@ -176,7 +178,7 @@
 
 - 제2정규화 샘플
 
-![image-20210310162326114](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210310162326114.png)
+  ![image-20210310162326114](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210310162326114.png)
 
 
 
@@ -184,15 +186,67 @@
 
 - 제3정규화의 원칙은 No transitive dependencies - 이행적 종속성(transitive dependencies)이 없어야 함
 
-  ex) 
+  ex) 제2정규화 결과물에서 author_name, author_profile은 title(pk)이 아닌 author_id에 의존하고 있으므로 이행적 종속성이 존재함
 
-6.4 차례
+- 실제 데이터에서는 author_id처럼 이행적 종속성을 명시적으로 드러내는 단서가 잘 없을 수도 있음
+
+  이 경우 서로 성격이 같은 컬럼들(암식적으로 식별자를 가진 컬럼들)을 찾아내려는 노력 필요
+
+- 제3정규화 샘플
+
+  ![image-20210312134148683](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210312134148683.png)
+
+
 
 
 
 # 4단계. 물리적 데이터 모델링
 
+- 이전 단계인 논리적 데이터 모델링이 관계형 데이터베이스에 맞는 이상적인 표를 만드는 것이라면, 물리적 데이터 모델링은 이상적인 표를 구체적인 제품에 맞는 현실적 표로 만드는 것
 
+- 이 단계에서 중요한 것은 성능임
+- 데이터베이스 제품별로 find slow query 관련 기능을 사용하면, 특별히 성능을 떨어뜨리는 query를 식별하기 용이함
+- **역정규화(denormalization) 또는 반정규화** : 쿼리 성능을 높이기 위해, 이상적으로 정규화된 테이블 구조를 변경하는 것
+- 역정규화 이전에 먼저 시도해 볼 수 있는 성능 향상 방안은 **index**(행별 읽기 성능을 비약적으로 향상시키지만, 쓰기 성능을 희생함), **cache**(쿼리 실행 결과를 저장했다가 동일한 쿼리가 들어왔을 때 사용) 등이 있음
+
+
+
+#### 1. 역정규화(denormalization) - 컬럼을 조작해서 join 줄이기
+
+- ex. 도서(topic_title)별 태그명(tag_name)을 확인하는 경우가 많을 때
+
+- 매번 JOIN을 수행하는 것은 성능을 저하시키므로, 의도적으로 중복을 허용하는 컬럼 추가
+
+  ![image-20210312155833875](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210312155833875.png)
+
+
+
+#### 2. 역정규화(denormalization) - 파생컬럼을 형성해 계산작업 줄이기
+
+- ex. 저자(author_id)별 도서 수(topic_count)를 최신 상태로 유지하고 싶을 때
+
+- 매번 GROUP BY를 수행하는 것은 성능을 저하시키므로, 연산 결과를 저장하는 컬럼 추가한 뒤 매번 도서(topic) 테이블에 row가 추가될 때 해당하는 topic_count를 1씩 증가
+
+  ![image-20210312160009024](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210312160009024.png)
+
+
+
+#### 3. 역정규화(denormalization) - 표를 쪼개기
+
+- ex. 전체 데이터가 너무 크거나, 자주 사용하는 column/row가 정해져 있을 때
+
+- 표를 column 또는 row 단위로 쪼개어 데이터 저장 및 query 처리를 병렬화
+
+  ![image-20210312160407107](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210312160407107.png)
+
+
+
+#### 4. 역정규화(denormalization) - 관계의 역정규화
+
+- ex. 저자(author_id)별 태그명(tag_name)을 확인하는 경우가 많을 때
+- 매번 topic, topic_tag_relation, tag 테이블을 모두 JOIN해야 하므로, 역정규화를 통해 JOIN 줄이기
+
+![image-20210312160448913](C:\Users\dslab01\AppData\Roaming\Typora\typora-user-images\image-20210312160448913.png)
 
 
 
